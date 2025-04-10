@@ -18,27 +18,32 @@ Route::get('/user', function (Request $request) {
 
 Route::prefix('songs')->group(function () {
 	Route::get('/', [SongController::class, 'index']);
-	Route::post('/', [SongController::class, 'store']);
 	Route::get('/{id}', [SongController::class, 'show']);
-	Route::put('/{id}', [SongController::class, 'update']);
-	Route::delete('/{id}', [SongController::class, 'destroy']);
-	Route::post('/{id}/play', [SongController::class, 'incrementPlayCount']);
+
+	// Admin-only routes
+	Route::middleware(['auth:sanctum', 'ability:admin'])->group(function () {
+		Route::post('/', [SongController::class, 'store']);
+		Route::patch('/{id}', [SongController::class, 'update']);
+		Route::delete('/{id}', [SongController::class, 'destroy']);
+	});
 });
 
 Route::prefix('genres')->group(function () {
 	Route::get('/', [GenreController::class, 'index']);
-	Route::post('/', [GenreController::class, 'store']);
 	Route::get('/{id}', [GenreController::class, 'show']);
-	Route::put('/{id}', [GenreController::class, 'update']);
-	Route::delete('/{id}', [GenreController::class, 'destroy']);
-	Route::get('/{id}/songs', [GenreController::class, 'songs']);
+
+	// Admin-only routes
+	Route::middleware(['auth:sanctum', 'ability:admin'])->group(function () {
+		Route::post('/', [GenreController::class, 'store']);
+		Route::patch('/{id}', [GenreController::class, 'update']);
+		Route::delete('/{id}', [GenreController::class, 'destroy']);
+	});
 });
 
 Route::prefix('users')->group(function () {
-	// Public routes
-	Route::middleware('auth:api')->group(function () {
-		Route::get('/profile', [UserController::class, 'profile']);
-		Route::put('/profile', [UserController::class, 'updateProfile']);
+	// Authenticated routes
+	Route::middleware('auth:sanctum')->group(function () {
+		Route::patch('/profile', [UserController::class, 'updateProfile']);
 		Route::post('/change-password', [UserController::class, 'changePassword']);
 		Route::post('/upgrade-premium', [UserController::class, 'upgradeToPremium']);
 	});
@@ -47,7 +52,7 @@ Route::prefix('users')->group(function () {
 	Route::middleware(['auth:sanctum', 'ability:admin'])->group(function () {
 		Route::get('/', [UserController::class, 'index']);
 		Route::get('/{id}', [UserController::class, 'show']);
-		Route::put('/{id}', [UserController::class, 'update']);
+		Route::patch('/{id}', [UserController::class, 'update']);
 		Route::delete('/{id}', [UserController::class, 'destroy']);
 	});
 });
@@ -57,15 +62,11 @@ Route::prefix('artists')->group(function () {
 	Route::get('/', [ArtistController::class, 'index']);
 	Route::get('/{id}', [ArtistController::class, 'show']);
 
-	// Authenticated routes
-	Route::middleware('auth:api')->group(function () {
+	// Admin-only routes
+	Route::middleware(['auth:sanctum', 'ability:admin'])->group(function () {
 		Route::post('/', [ArtistController::class, 'store']);
-		Route::put('/{id}', [ArtistController::class, 'update']);
-
-		// Admin-only routes
-		Route::middleware('admin')->group(function () {
-			Route::delete('/{id}', [ArtistController::class, 'destroy']);
-		});
+		Route::patch('/{id}', [ArtistController::class, 'update']);
+		Route::delete('/{id}', [ArtistController::class, 'destroy']);
 	});
 });
 
@@ -91,9 +92,9 @@ Route::prefix('albums')->group(function () {
 	Route::get('/', [AlbumController::class, 'index']);
 	Route::get('/{id}', [AlbumController::class, 'show']);
 
-	Route::middleware(['auth:api'])->group(function () {
+	Route::middleware(['auth:sanctum', 'ability:admin'])->group(function () {
 		Route::post('/', [AlbumController::class, 'store']);
-		Route::put('/{id}', [AlbumController::class, 'update']);
+		Route::patch('/{id}', [AlbumController::class, 'update']);
 		Route::delete('/{id}', [AlbumController::class, 'destroy']);
 	});
 });

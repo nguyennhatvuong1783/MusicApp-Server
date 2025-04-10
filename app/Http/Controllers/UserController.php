@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\CloudinaryHelper;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -42,23 +43,11 @@ class UserController extends Controller
 	}
 
 	/**
-	 * Get current authenticated user profile
-	 */
-	public function profile()
-	{
-		$user = auth()->user();
-		return response()->json([
-			'success' => true,
-			'data' => $user
-		]);
-	}
-
-	/**
 	 * Update user profile
 	 */
 	public function updateProfile(Request $request)
 	{
-		$user = auth()->user();
+		$user = $request->user();
 
 		$validator = Validator::make($request->all(), [
 			'username' => 'sometimes|string|max:50|unique:users,username,' . $user->id,
@@ -78,13 +67,9 @@ class UserController extends Controller
 
 		// Handle image upload
 		if ($request->hasFile('image')) {
-			// Delete old image if exists
-			if ($user->image_url) {
-				Storage::disk('public')->delete($user->image_url);
-			}
-
-			$path = $request->file('image')->store('users', 'public');
-			$data['image_url'] = $path;
+			// Upload image to Cloudinary
+			$image = $request->file('image');
+			$data['image_url'] = CloudinaryHelper::uploadImage($image->getRealPath());
 		}
 
 		$user->update($data);
@@ -100,7 +85,7 @@ class UserController extends Controller
 	 */
 	public function changePassword(Request $request)
 	{
-		$user = auth()->user();
+		$user = $request->user();
 
 		$validator = Validator::make($request->all(), [
 			'current_password' => 'required|string',
@@ -138,7 +123,7 @@ class UserController extends Controller
 	 */
 	public function upgradeToPremium(Request $request)
 	{
-		$user = auth()->user();
+		$user = $request->user();
 
 		if ($user->account_type === 'premium') {
 			return response()->json([
@@ -174,14 +159,6 @@ class UserController extends Controller
 	 */
 	public function show(string $id)
 	{
-		// Chỉ admin mới có thể xem thông tin user khác
-		if (auth()->user()->account_type !== 'admin') {
-			return response()->json([
-				'success' => false,
-				'message' => 'Unauthorized'
-			], 403);
-		}
-
 		$user = User::find($id);
 
 		if (!$user) {
@@ -202,14 +179,6 @@ class UserController extends Controller
 	 */
 	public function update(Request $request, string $id)
 	{
-		// Chỉ admin mới có thể cập nhật user khác
-		if (auth()->user()->account_type !== 'admin') {
-			return response()->json([
-				'success' => false,
-				'message' => 'Unauthorized'
-			], 403);
-		}
-
 		$user = User::find($id);
 
 		if (!$user) {
@@ -247,14 +216,6 @@ class UserController extends Controller
 	 */
 	public function destroy(string $id)
 	{
-		// Chỉ admin mới có thể xóa user
-		if (auth()->user()->account_type !== 'admin') {
-			return response()->json([
-				'success' => false,
-				'message' => 'Unauthorized'
-			], 403);
-		}
-
 		$user = User::find($id);
 
 		if (!$user) {
@@ -270,11 +231,6 @@ class UserController extends Controller
 				'success' => false,
 				'message' => 'You cannot delete yourself'
 			], 400);
-		}
-
-		// Xóa ảnh đại diện nếu có
-		if ($user->image_url) {
-			Storage::disk('public')->delete($user->image_url);
 		}
 
 		$user->delete();

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\CloudinaryHelper;
 use App\Models\Song;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -70,7 +71,8 @@ class SongController extends Controller
 		}
 
 		// Upload file
-		$filePath = $request->file('file')->store('songs', 'public');
+		$file = $request->file('file');
+		$filePath = CloudinaryHelper::uploadImage($file->getRealPath(), 'songs');
 
 		$song = Song::create([
 			'title' => $request->title,
@@ -146,11 +148,8 @@ class SongController extends Controller
 		$data = $request->only(['title', 'album_id', 'duration', 'release_date']);
 
 		if ($request->hasFile('file')) {
-			// Delete old file
-			Storage::disk('public')->delete($song->file_url);
-
-			// Upload new file
-			$data['file_url'] = $request->file('file')->store('songs', 'public');
+			$file = $request->file('file');
+			$data['file_url'] = CloudinaryHelper::uploadImage($file->getRealPath(), 'songs');
 		}
 
 		$song->update($data);
@@ -184,36 +183,11 @@ class SongController extends Controller
 			], 404);
 		}
 
-		// Delete file
-		Storage::disk('public')->delete($song->file_url);
-
 		$song->delete();
 
 		return response()->json([
 			'success' => true,
 			'message' => 'Song deleted successfully'
-		]);
-	}
-
-	/**
-	 * Increment play count when a song is played
-	 */
-	public function incrementPlayCount($id)
-	{
-		$song = Song::find($id);
-
-		if (!$song) {
-			return response()->json([
-				'success' => false,
-				'message' => 'Song not found'
-			], 404);
-		}
-
-		$song->increment('play_count');
-
-		return response()->json([
-			'success' => true,
-			'play_count' => $song->play_count
 		]);
 	}
 }

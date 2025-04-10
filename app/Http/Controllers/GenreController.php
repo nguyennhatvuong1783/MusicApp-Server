@@ -141,24 +141,4 @@ class GenreController extends Controller
 			'message' => 'Genre deleted successfully'
 		]);
 	}
-
-	/**
-	 * Get all songs for a specific genre
-	 */
-	public function songs($id)
-	{
-		$genre = Genre::with('songs.artists', 'songs.album')->find($id);
-
-		if (!$genre) {
-			return response()->json([
-				'success' => false,
-				'message' => 'Genre not found'
-			], 404);
-		}
-
-		return response()->json([
-			'success' => true,
-			'data' => $genre->songs
-		]);
-	}
 }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\CloudinaryHelper;
 use App\Models\Album;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -44,16 +45,14 @@ class AlbumController extends Controller
 	{
 		$user = Auth::user();
 
-		// Kiểm tra quyền
-		if (!$user->isAdmin() && !$user->isArtist()) {
-			return $this->unauthorizedResponse();
-		}
-
 		// Validate dữ liệu
 		$validator = Validator::make($request->all(), [
 			'title' => 'required|string|max:100',
 			'artist_id' => 'required|exists:artists,id',
-			'cover_image' => 'required|image|mimes:jpeg,png,jpg|max:2048',
+			'genre_id' => 'required|exists:genres,id',
+			'release_date' => 'nullable|date',
+			'description' => 'nullable|string|max:500',
+			'image' => 'required|image|mimes:jpeg,png,jpg|max:2048',
 			'song_ids' => 'array',
 			'song_ids.*' => 'exists:songs,id'
 		]);
@@ -62,14 +61,15 @@ class AlbumController extends Controller
 			return $this->validationErrorResponse($validator);
 		}
 
-		// Upload ảnh
-		$coverPath = $request->file('cover_image')->store('albums', 'public');
+		// Upload image to Cloudinary
+		$image = $request->file('image');
+		$imageUrl = CloudinaryHelper::uploadImage($image->getRealPath());
 
 		// Tạo album
 		$album = Album::create([
 			'title' => $request->title,
 			'artist_id' => $request->artist_id,
-			'cover_image_url' => $coverPath,
+			'image_url' => $imageUrl,
 			'release_date' => $request->release_date,
 			'genre_id' => $request->genre_id,
 			'description' => $request->description
@@ -111,18 +111,18 @@ class AlbumController extends Controller
 	public function update(Request $request, string $id)
 	{
 		$album = Album::find($id);
-		$user = Auth::user();
 
-		// Kiểm tra tồn tại và quyền
+		// Kiểm tra tồn tại
 		if (!$album) return $this->notFoundResponse('Album');
-		if (!$this->checkAlbumOwnership($user, $album)) {
-			return $this->unauthorizedResponse();
-		}
 
 		// Validate
 		$validator = Validator::make($request->all(), [
 			'title' => 'sometimes|string|max:100',
-			'cover_image' => 'sometimes|image|mimes:jpeg,png,jpg|max:2048',
+			'image' => 'sometimes|image|mimes:jpeg,png,jpg|max:2048',
+			'artist_id' => 'sometimes|exists:artists,id',
+			'genre_id' => 'sometimes|exists:genres,id',
+			'release_date' => 'sometimes|date',
+			'description' => 'sometimes|string|max:500',
 			'song_ids' => 'array',
 			'song_ids.*' => 'exists:songs,id'
 		]);
@@ -135,9 +135,9 @@ class AlbumController extends Controller
 		$data = $request->only(['title', 'release_date', 'genre_id', 'description']);
 
 		// Xử lý ảnh
-		if ($request->hasFile('cover_image')) {
-			Storage::delete('public/' . $album->cover_image_url);
-			$data['cover_image_url'] = $request->file('cover_image')->store('albums', 'public');
+		if ($request->hasFile('image')) {
+			$image = $request->file('image');
+			$data['image_url'] = CloudinaryHelper::uploadImage($image->getRealPath());
 		}
 
 		$album->update($data);
@@ -159,29 +159,15 @@ class AlbumController extends Controller
 	public function destroy(string $id)
 	{
 		$album = Album::find($id);
-		$user = Auth::user();
 
 		if (!$album) return $this->notFoundResponse('Album');
-		if (!$this->checkAlbumOwnership($user, $album)) {
-			return $this->unauthorizedResponse();
-		}
 
-		// Xóa ảnh và bài hát
-		Storage::delete('public/' . $album->cover_image_url);
-		$album->songs()->detach();
 		$album->delete();
 
 		return response()->json([
 			'success' => true,
 			'message' => 'Album deleted successfully'
 		]);
-	}
-
-	// Helper: Kiểm tra quyền sở hữu
-	private function checkAlbumOwnership($user, $album)
-	{
-		return $user->isAdmin() ||
-			($user->isArtist() && $album->artist->user_id == $user->id);
 	}
 
 	// Helper: Trả lỗi 404
@@ -191,15 +177,6 @@ class AlbumController extends Controller
 			'success' => false,
 			'message' => "$item not found"
 		], 404);
-	}
-
-	// Helper: Trả lỗi 403
-	private function unauthorizedResponse()
-	{
-		return response()->json([
-			'success' => false,
-			'message' => 'Unauthorized'
-		], 403);
 	}
 
 	// Helper: Trả lỗi validate
