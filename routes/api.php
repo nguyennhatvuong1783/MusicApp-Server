@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AlbumController;
 use App\Http\Controllers\ArtistController;
+use App\Http\Controllers\AuthController;
 use App\Http\Controllers\GenreController;
 use App\Http\Controllers\HistoryController;
 use App\Http\Controllers\PaymentController;
@@ -43,7 +44,7 @@ Route::prefix('users')->group(function () {
 	});
 
 	// Admin-only routes
-	Route::middleware(['auth:api', 'admin'])->group(function () {
+	Route::middleware(['auth:sanctum', 'ability:admin'])->group(function () {
 		Route::get('/', [UserController::class, 'index']);
 		Route::get('/{id}', [UserController::class, 'show']);
 		Route::put('/{id}', [UserController::class, 'update']);
@@ -110,4 +111,15 @@ Route::prefix('payments')->middleware('auth:api')->group(function () {
 	Route::post('/', [PaymentController::class, 'store']);
 	Route::get('/methods', [PaymentController::class, 'getPaymentMethods']);
 	Route::post('/webhook', [PaymentController::class, 'handleWebhook']);
+});
+
+Route::prefix('auth')->group(function () {
+	Route::post('/register', [AuthController::class, 'register']);
+	Route::post('/login', [AuthController::class, 'login']);
+
+	Route::middleware('auth:sanctum')->group(function () {
+		Route::post('/logout', [AuthController::class, 'logout']);
+		Route::get('/me', [AuthController::class, 'me']);
+		Route::post('/refresh', [AuthController::class, 'refresh']);
+	});
 });

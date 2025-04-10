@@ -15,14 +15,6 @@ class UserController extends Controller
 	 */
 	public function index(Request $request)
 	{
-		// Chỉ admin mới có thể xem danh sách users
-		if (auth()->user()->account_type !== 'admin') {
-			return response()->json([
-				'success' => false,
-				'message' => 'Unauthorized'
-			], 403);
-		}
-
 		$query = User::query();
 
 		// Filter by username or email

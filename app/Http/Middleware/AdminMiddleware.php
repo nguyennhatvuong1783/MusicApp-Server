@@ -13,9 +13,9 @@ class AdminMiddleware
 	 *
 	 * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
 	 */
-	public function handle(Request $request, Closure $next): Response
+	public function handle(Request $request, Closure $next, $ability): Response
 	{
-		if (auth()->user()->account_type !== 'admin') {
+		if ($request->user()->account_type !== 'admin' || !$request->user()->tokenCan($ability)) {
 			return response()->json([
 				'success' => false,
 				'message' => 'Unauthorized'
