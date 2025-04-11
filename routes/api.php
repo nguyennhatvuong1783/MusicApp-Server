@@ -71,20 +71,18 @@ Route::prefix('artists')->group(function () {
 });
 
 Route::prefix('playlists')->group(function () {
-	// Public routes
-	Route::get('/{id}', [PlaylistController::class, 'show']);
-
 	// Authenticated routes
-	Route::middleware('auth:api')->group(function () {
+	Route::middleware('auth:sanctum')->group(function () {
 		Route::get('/', [PlaylistController::class, 'index']);
+		Route::get('/{id}', [PlaylistController::class, 'show']);
 		Route::post('/', [PlaylistController::class, 'store']);
-		Route::put('/{id}', [PlaylistController::class, 'update']);
+		Route::patch('/{id}', [PlaylistController::class, 'update']);
 		Route::delete('/{id}', [PlaylistController::class, 'destroy']);
 
 		// Song management
 		Route::post('/{id}/songs', [PlaylistController::class, 'addSongs']);
 		Route::delete('/{id}/songs', [PlaylistController::class, 'removeSongs']);
-		Route::put('/{id}/reorder', [PlaylistController::class, 'reorderSongs']);
+		Route::patch('/{id}/reorder', [PlaylistController::class, 'reorderSongs']);
 	});
 });
 
@@ -99,15 +97,15 @@ Route::prefix('albums')->group(function () {
 	});
 });
 
-Route::prefix('history')->middleware('auth:api')->group(function () {
+Route::prefix('history')->middleware('auth:sanctum')->group(function () {
 	Route::get('/', [HistoryController::class, 'index']);
 	Route::post('/', [HistoryController::class, 'store']);
-	Route::put('/{id}/progress', [HistoryController::class, 'updateProgress']);
+	Route::patch('/{id}/progress', [HistoryController::class, 'updateProgress']);
 	Route::delete('/{id}', [HistoryController::class, 'destroy']);
 	Route::delete('/clear', [HistoryController::class, 'clear']);
 });
 
-Route::prefix('payments')->middleware('auth:api')->group(function () {
+Route::prefix('payments')->middleware('auth:sanctum')->group(function () {
 	Route::get('/', [PaymentController::class, 'index']);
 	Route::post('/', [PaymentController::class, 'store']);
 	Route::get('/methods', [PaymentController::class, 'getPaymentMethods']);

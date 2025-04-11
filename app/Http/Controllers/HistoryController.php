@@ -15,11 +15,9 @@ class HistoryController extends Controller
 	 */
 	public function index(Request $request)
 	{
-		$user = Auth::user();
+		$user = $request->user();
 
-		$query = $user->history()
-			->with(['song.artists', 'song.album'])
-			->orderBy('played_at', 'desc');
+		$query = $user->history()->with(['song.artists', 'song.album'])->orderBy('played_at', 'desc');
 
 		// Lọc theo khoảng thời gian
 		if ($request->has('start_date') && $request->has('end_date')) {
@@ -59,7 +57,7 @@ class HistoryController extends Controller
 		$song = Song::find($request->song_id);
 
 		$history = History::create([
-			'user_id' => Auth::id(),
+			'user_id' => $request->user()->id,
 			'song_id' => $song->id,
 			'progress' => $request->progress ?? 0,
 			'played_at' => now()
@@ -123,7 +121,7 @@ class HistoryController extends Controller
 	// Cập nhật tiến độ nghe
 	public function updateProgress(Request $request, $id)
 	{
-		$history = History::where('user_id', Auth::id())->find($id);
+		$history = History::where('user_id', $request->user()->id)->find($id);
 
 		if (!$history) {
 			return response()->json([

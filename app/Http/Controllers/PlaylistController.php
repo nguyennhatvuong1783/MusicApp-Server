@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\CloudinaryHelper;
 use App\Models\Playlist;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -14,7 +15,7 @@ class PlaylistController extends Controller
 	 */
 	public function index(Request $request)
 	{
-		$user = auth()->user();
+		$user = $request->user();
 
 		$query = $user->playlists();
 
@@ -45,7 +46,6 @@ class PlaylistController extends Controller
 			'title' => 'required|string|max:100',
 			'description' => 'nullable|string',
 			'image' => 'sometimes|image|mimes:jpeg,png,jpg,gif|max:2048',
-			'is_public' => 'sometimes|boolean',
 			'song_ids' => 'sometimes|array',
 			'song_ids.*' => 'exists:songs,id'
 		]);
@@ -58,16 +58,16 @@ class PlaylistController extends Controller
 		}
 
 		$data = [
-			'user_id' => auth()->id(),
+			'user_id' => $request->user()->id,
 			'title' => $request->title,
 			'description' => $request->description,
-			'is_public' => $request->boolean('is_public', true)
 		];
 
 		// Handle image upload
 		if ($request->hasFile('image')) {
-			$path = $request->file('image')->store('playlists', 'public');
-			$data['image_url'] = $path;
+			// Upload image to Cloudinary
+			$image = $request->file('image');
+			$data['image_url'] = CloudinaryHelper::uploadImage($image->getRealPath());
 		}
 
 		$playlist = Playlist::create($data);
@@ -100,7 +100,7 @@ class PlaylistController extends Controller
 		}
 
 		// Check if playlist is private and doesn't belong to current user
-		if (!$playlist->is_public && $playlist->user_id !== auth()->id()) {
+		if ($playlist->user_id !== auth()->id()) {
 			return response()->json([
 				'success' => false,
 				'message' => 'Unauthorized to view this playlist'
@@ -128,7 +128,7 @@ class PlaylistController extends Controller
 		}
 
 		// Check if current user owns the playlist
-		if ($playlist->user_id !== auth()->id()) {
+		if ($playlist->user_id !== $request->user()->id) {
 			return response()->json([
 				'success' => false,
 				'message' => 'Unauthorized to update this playlist'
@@ -139,7 +139,6 @@ class PlaylistController extends Controller
 			'title' => 'sometimes|string|max:100',
 			'description' => 'nullable|string',
 			'image' => 'sometimes|image|mimes:jpeg,png,jpg,gif|max:2048',
-			'is_public' => 'sometimes|boolean',
 			'song_ids' => 'sometimes|array',
 			'song_ids.*' => 'exists:songs,id'
 		]);
@@ -151,17 +150,13 @@ class PlaylistController extends Controller
 			], 422);
 		}
 
-		$data = $request->only(['title', 'description', 'is_public']);
+		$data = $request->only(['title', 'description']);
 
 		// Handle image upload
 		if ($request->hasFile('image')) {
-			// Delete old image if exists
-			if ($playlist->image_url) {
-				Storage::disk('public')->delete($playlist->image_url);
-			}
-
-			$path = $request->file('image')->store('playlists', 'public');
-			$data['image_url'] = $path;
+			// Upload image to Cloudinary
+			$image = $request->file('image');
+			$data['image_url'] = CloudinaryHelper::uploadImage($image->getRealPath());
 		}
 
 		$playlist->update($data);
@@ -199,11 +194,6 @@ class PlaylistController extends Controller
 			], 403);
 		}
 
-		// Delete image if exists
-		if ($playlist->image_url) {
-			Storage::disk('public')->delete($playlist->image_url);
-		}
-
 		$playlist->delete();
 
 		return response()->json([
@@ -226,7 +216,7 @@ class PlaylistController extends Controller
 			], 404);
 		}
 
-		if ($playlist->user_id !== auth()->id()) {
+		if ($playlist->user_id !== $request->user()->id) {
 			return response()->json([
 				'success' => false,
 				'message' => 'Unauthorized to modify this playlist'
@@ -277,7 +267,7 @@ class PlaylistController extends Controller
 			], 404);
 		}
 
-		if ($playlist->user_id !== auth()->id()) {
+		if ($playlist->user_id !== $request->user()->id) {
 			return response()->json([
 				'success' => false,
 				'message' => 'Unauthorized to modify this playlist'
@@ -319,7 +309,7 @@ class PlaylistController extends Controller
 			], 404);
 		}
 
-		if ($playlist->user_id !== auth()->id()) {
+		if ($playlist->user_id !== $request->user()->id) {
 			return response()->json([
 				'success' => false,
 				'message' => 'Unauthorized to modify this playlist'

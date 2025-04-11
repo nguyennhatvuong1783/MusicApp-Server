@@ -12,6 +12,7 @@ class History extends Model
 	protected $fillable = [
 		'user_id',
 		'song_id',
+		'played_at',
 		'progress'
 	];
 
