@@ -21,7 +21,7 @@ class PlaylistController extends Controller
 
 		// Filter by title
 		if ($request->has('title')) {
-			$query->where('title', 'like', '%' . $request->title . '%');
+			$query->where('title', 'ilike', '%' . $request->title . '%');
 		}
 
 		// Include songs count

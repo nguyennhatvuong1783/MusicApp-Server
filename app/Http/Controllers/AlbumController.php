@@ -6,7 +6,6 @@ use App\Helpers\CloudinaryHelper;
 use App\Models\Album;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
 class AlbumController extends Controller
@@ -19,14 +18,31 @@ class AlbumController extends Controller
 		$query = Album::with(['artist', 'songs', 'genre'])
 			->withCount('songs');
 
+		if ($request->has('search')) {
+			$searchTerm = $request->search;
+			$query->where(function ($q) use ($searchTerm) {
+				$q->where('title', 'ilike', '%' . $searchTerm . '%')
+					->orWhereHas('artist', function ($subQuery) use ($searchTerm) {
+						$subQuery->where('name', 'ilike', '%' . $searchTerm . '%');
+					});
+			});
+		}
+
 		// Lọc theo tiêu đề
 		if ($request->has('title')) {
-			$query->where('title', 'like', '%' . $request->title . '%');
+			$query->where('title', 'ilike', '%' . $request->title . '%');
 		}
 
 		// Lọc theo nghệ sĩ
 		if ($request->has('artist_id')) {
 			$query->where('artist_id', $request->artist_id);
+		}
+
+		// Thêm lọc theo TÊN nghệ sĩ (quan hệ artist)
+		if ($request->has('artist_name')) {
+			$query->whereHas('artist', function ($q) use ($request) {
+				$q->where('name', 'ilike', '%' . $request->artist_name . '%');
+			});
 		}
 
 		// Phân trang

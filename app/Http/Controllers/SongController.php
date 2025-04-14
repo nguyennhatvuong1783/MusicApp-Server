@@ -15,11 +15,21 @@ class SongController extends Controller
 	 */
 	public function index(Request $request)
 	{
-		$query = Song::with(['artists', 'album', 'genres']);
+		$query = Song::with(['artists', 'album', 'genres'])->orderBy('id');
+
+		if ($request->has('search')) {
+			$searchTerm = $request->search;
+			$query->where(function ($q) use ($searchTerm) {
+				$q->where('title', 'ilike', '%' . $searchTerm . '%')
+					->orWhereHas('artists', function ($subQuery) use ($searchTerm) {
+						$subQuery->where('name', 'ilike', '%' . $searchTerm . '%');
+					});
+			});
+		}
 
 		// Filter by title
 		if ($request->has('title')) {
-			$query->where('title', 'like', '%' . $request->title . '%');
+			$query->where('title', 'ilike', '%' . $request->title . '%');
 		}
 
 		// Filter by artist

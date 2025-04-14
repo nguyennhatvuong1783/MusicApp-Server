@@ -14,11 +14,11 @@ class ArtistController extends Controller
 	 */
 	public function index(Request $request)
 	{
-		$query = Artist::query();
+		$query = Artist::query()->with(['songs.album']);
 
 		// Filter by name
 		if ($request->has('name')) {
-			$query->where('name', 'like', '%' . $request->name . '%');
+			$query->where('name', 'ilike', '%' . $request->name . '%');
 		}
 
 		// Include songs count
