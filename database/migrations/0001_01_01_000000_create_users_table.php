@@ -19,7 +19,7 @@ return new class extends Migration
 			$table->string('image_url', 255)->nullable();
 			$table->timestamp('email_verified_at')->nullable();
 			$table->string('password');
-			$table->enum('account_type', ['free', 'premium', 'admin'])->default('free');
+			$table->enum('account_type', ['free', 'premium', 'admin', 'artist'])->default('free');
 			$table->boolean('is_active')->default(true);
 			$table->rememberToken();
 			$table->timestamps();

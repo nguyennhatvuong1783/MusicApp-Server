@@ -14,7 +14,7 @@ class ArtistController extends Controller
 	 */
 	public function index(Request $request)
 	{
-		$query = Artist::query()->with(['songs.album']);
+		$query = Artist::query()->with(['songs.artists']);
 
 		// Filter by name
 		if ($request->has('name')) {
@@ -75,7 +75,7 @@ class ArtistController extends Controller
 	 */
 	public function show(string $id)
 	{
-		$artist = Artist::with(['songs.album', 'albums'])
+		$artist = Artist::with(['songs.artists', 'songs.album', 'albums'])
 			->withCount(['songs', 'albums'])
 			->find($id);
 

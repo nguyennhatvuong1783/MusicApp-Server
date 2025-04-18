@@ -15,7 +15,7 @@ class AlbumController extends Controller
 	 */
 	public function index(Request $request)
 	{
-		$query = Album::with(['artist', 'songs', 'genre'])
+		$query = Album::with(['artist', 'songs.artists', 'genre'])
 			->withCount('songs');
 
 		if ($request->has('search')) {

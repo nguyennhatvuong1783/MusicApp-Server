@@ -20,6 +20,8 @@ return new class extends Migration
 
 		Schema::create('artists', function (Blueprint $table) {
 			$table->id();
+			$table->foreignId('user_id')->nullable()->constrained('users')->onDelete('set null');
+			$table->boolean('is_verified')->default(true);
 			$table->string('name', 100);
 			$table->text('biography')->nullable();
 			$table->string('image_url', 255)->nullable();

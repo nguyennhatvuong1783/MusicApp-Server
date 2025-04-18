@@ -151,5 +151,35 @@ class DatabaseSeeder extends Seeder
 			'song_id' => 3,
 			'genre_id' => 6,
 		]]);
+
+		DB::table('playlists')->insert([[
+			'title' => 'Playlist 1',
+			'description' => 'A collection of my favorite songs.',
+			'image_url' => 'https://cdn.dribbble.com/userupload/20851422/file/original-b82fd38c350d47a4f8f4e689f609993a.png',
+			'user_id' => 1,
+		], [
+			'title' => 'Playlist 2',
+			'description' => 'Chill Vibes',
+			'image_url' => 'https://cdn.dribbble.com/userupload/20851422/file/original-b82fd38c350d47a4f8f4e689f609993a.png',
+			'user_id' => 2,
+		]]);
+
+		DB::table('playlist_songs')->insert([[
+			'playlist_id' => 1,
+			'song_id' => 1,
+			'position' => 1,
+		], [
+			'playlist_id' => 1,
+			'song_id' => 2,
+			'position' => 2,
+		], [
+			'playlist_id' => 2,
+			'song_id' => 3,
+			'position' => 1,
+		], [
+			'playlist_id' => 2,
+			'song_id' => 1,
+			'position' => 2,
+		]]);
 	}
 }
