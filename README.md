@@ -7,6 +7,51 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
 
+# 🎧 MusicApp - Backend
+
+Đây là phần backend của dự án **Web Nghe Nhạc Trực Tuyến**, được xây dựng bằng **Laravel** và **PostgreSQL**.
+
+## 🧰 Công nghệ sử dụng
+
+- [Laravel 12](https://laravel.com/)
+- [PostgreSQL](https://www.postgresql.org/)
+- [Laravel Sanctum](https://laravel.com/docs/10.x/sanctum)
+- [Cloudinary](https://cloudinary.com/)
+
+## ⚙️ Cài đặt và khởi chạy
+
+```bash
+# Cài đặt các dependencies
+composer install
+
+# Sao chép file .env
+cp .env.example .env
+
+# Thiết lập database trong .env (PostgreSQL)
+DB_CONNECTION=pgsql
+DB_HOST=127.0.0.1
+DB_PORT=5432
+DB_DATABASE=music_app
+DB_USERNAME=postgres
+DB_PASSWORD=your_postgres_password
+
+# Thiết lập cloud trong .env (Cloudinary)
+CLOUDINARY_KEY=API_KEY
+CLOUDINARY_SECRET=API_SECRET
+CLOUDINARY_CLOUD_NAME=CLOUD_NAME
+
+# Generate app key
+php artisan key:generate
+
+# Chạy migration + seed dữ liệu mẫu
+php artisan migrate --seed
+
+# Chạy server local
+php artisan serve
+
+# Server sẽ chạy tại: http://localhost:8000
+```
+
 ## About Laravel
 
 Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
