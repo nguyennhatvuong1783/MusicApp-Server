@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AIController;
 use App\Http\Controllers\AlbumController;
 use App\Http\Controllers\ArtistController;
 use App\Http\Controllers\AuthController;
@@ -122,3 +123,5 @@ Route::prefix('auth')->group(function () {
 		Route::post('/refresh', [AuthController::class, 'refresh']);
 	});
 });
+
+Route::post('/ai/suggest', [AIController::class, 'suggest']);
